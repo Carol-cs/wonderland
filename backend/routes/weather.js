@@ -32,9 +32,11 @@ router.get("/", async (req, res) => {
     );
     const weatherData = await weatherResponse.json();
     console.log(weatherData);
-    const mood = weatherToMood(weatherData);
-    console.log(mood);
-    res.redirect(`http://localhost:3000/Dashboard?mood=${mood}&code=${code}`);
+    const country = weatherData.sys.country;
+    console.log(country);
+    res.redirect(
+      `http://localhost:3000/Dashboard?country=${country}&code=${code}`
+    );
   } catch (error) {
     console.error("Error:", error);
     res

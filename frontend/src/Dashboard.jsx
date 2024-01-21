@@ -17,7 +17,7 @@ const Dashboard = () => {
   const [playingTrack, setPlayingTrack] = useState();
   const [lyrics, setLyrics] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const mood = new URLSearchParams(window.location.search).get("mood");
+  const country = new URLSearchParams(window.location.search).get("country");
 
   function chooseTrack(track) {
     setPlayingTrack(track);
@@ -49,23 +49,23 @@ const Dashboard = () => {
     if (!accessToken) return;
 
     let cancel = false; // used to cancel the previous query when a new query is made
-    spotifyApi.searchTracks(`${mood}`).then((res) => {
+    spotifyApi.getNewReleases({ country: country }).then((res) => {
       if (cancel) return;
       setSearchResults(
-        res.body.tracks.items.map((track) => {
-          const smallestAlbumImage = track.album.images.reduce(
+        res.body.albums.items.map((album) => {
+          const smallestAlbumImage = album.images.reduce(
             // get the smallest image for the album
             (smallest, image) => {
               if (image.height < smallest.height) return image;
               return smallest;
             },
-            track.album.images[0]
+            album.images[0]
           );
 
           return {
-            artist: track.artists[0].name,
-            title: track.name,
-            uri: track.uri,
+            artist: album.artists[0].name,
+            title: album.name,
+            uri: album.uri,
             albumUrl: smallestAlbumImage.url,
           };
         })
