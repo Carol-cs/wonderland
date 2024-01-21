@@ -18,6 +18,7 @@ const Dashboard = () => {
   const [lyrics, setLyrics] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const country = new URLSearchParams(window.location.search).get("country");
+  const mood = new URLSearchParams(window.location.search).get("mood");
 
   function chooseTrack(track) {
     setPlayingTrack(track);
@@ -49,27 +50,62 @@ const Dashboard = () => {
     if (!accessToken) return;
 
     let cancel = false; // used to cancel the previous query when a new query is made
+    // spotifyApi.getNewReleases({ country: country }).then((res) => {
+    //   if (cancel) return;
+    //   setSearchResults(
+    //     res.body.albums.items.map((album) => {
+    //       const smallestAlbumImage = album.images.reduce(
+    //         // get the smallest image for the album
+    //         (smallest, image) => {
+    //           if (image.height < smallest.height) return image;
+    //           return smallest;
+    //         },
+    //         album.images[0]
+    //       );
+
+    //       return {
+    //         artist: album.artists[0].name,
+    //         title: album.name,
+    //         uri: album.uri,
+    //         albumUrl: smallestAlbumImage.url,
+    //       };
+    //     })
+    //   );
+    // });
     spotifyApi.getNewReleases({ country: country }).then((res) => {
       if (cancel) return;
-      setSearchResults(
-        res.body.albums.items.map((album) => {
-          const smallestAlbumImage = album.images.reduce(
-            // get the smallest image for the album
-            (smallest, image) => {
-              if (image.height < smallest.height) return image;
-              return smallest;
-            },
-            album.images[0]
-          );
+      const albumIds = res.body.albums.items.map((album) => album.id);
 
-          return {
-            artist: album.artists[0].name,
-            title: album.name,
-            uri: album.uri,
-            albumUrl: smallestAlbumImage.url,
-          };
-        })
+      // Search tracks for each album
+      const trackPromises = albumIds.map((albumId) =>
+        spotifyApi.searchTracks(`${mood}`)
       );
+
+      Promise.all(trackPromises).then((trackResults) => {
+        const tracks = trackResults.flatMap(
+          (result) => result.body.tracks.items
+        );
+
+        setSearchResults(
+          tracks.map((track) => {
+            const smallestAlbumImage = track.album.images.reduce(
+              // get the smallest image for the album
+              (smallest, image) => {
+                if (image.height < smallest.height) return image;
+                return smallest;
+              },
+              track.album.images[0]
+            );
+
+            return {
+              artist: track.artists[0].name,
+              title: track.name,
+              uri: track.uri,
+              albumUrl: smallestAlbumImage.url,
+            };
+          })
+        );
+      });
     });
 
     return () => (cancel = true);

@@ -34,8 +34,10 @@ router.get("/", async (req, res) => {
     console.log(weatherData);
     const country = weatherData.sys.country;
     console.log(country);
+    const mood = weatherToMood(weatherData);
+    console.log(mood);
     res.redirect(
-      `http://localhost:3000/Dashboard?country=${country}&code=${code}`
+      `http://localhost:3000/Dashboard?country=${country}&mood=${mood}&code=${code}`
     );
   } catch (error) {
     console.error("Error:", error);
